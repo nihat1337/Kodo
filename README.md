@@ -4,6 +4,18 @@ A small QR code app for iOS: turn a link into a QR code, and read QR codes with 
 
 Written in **pure SwiftUI** — no UIKit anywhere, not even a `UIViewRepresentable` bridge. The camera preview is drawn by SwiftUI itself from raw video frames.
 
+## Screenshots
+
+<p align="center">
+  <img src="docs/screenshots/create.png" width="260" alt="Create tab: a link typed in with its QR code below, and Share / Save / Clear actions" />
+  <img src="docs/screenshots/scan.png" width="260" alt="Scan tab: camera area, torch button and Scan from photo" />
+  <img src="docs/screenshots/history.png" width="260" alt="History tab: a saved code with its timestamp and a favorite star" />
+</p>
+
+<p align="center"><sub><b>Create</b> · <b>Scan</b> · <b>History</b></sub></p>
+
+The Scan shot is from the Simulator, which has no camera — on a device that grey area is the live preview.
+
 ## Features
 
 - **Create** — type a link, get a QR code. Export is rendered at 1024px+ (not the on-screen size), so it stays sharp when printed.
