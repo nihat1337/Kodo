@@ -6,13 +6,30 @@ Written in **pure SwiftUI** — no UIKit anywhere, not even a `UIViewRepresentab
 
 ## Screenshots
 
-<p align="center">
-  <img src="docs/screenshots/create.png" width="260" alt="Create tab: a link typed in with its QR code below, and Share / Save / Clear actions" />
-  <img src="docs/screenshots/scan.png" width="260" alt="Scan tab: camera area, torch button and Scan from photo" />
-  <img src="docs/screenshots/history.png" width="260" alt="History tab: a saved code with its timestamp and a favorite star" />
-</p>
-
-<p align="center"><sub><b>Create</b> · <b>Scan</b> · <b>History</b></sub></p>
+<div align="center">
+<table>
+  <tr>
+    <td align="center">
+      <img src="docs/screenshots/create.png" width="230" alt="Create tab: six type cards, a website field, and the style section with colour palettes and module shapes"><br>
+      <sub><b>Create</b> — pick a type, then style it</sub>
+    </td>
+    <td align="center">
+      <img src="docs/screenshots/code.png" width="230" alt="A finished QR code in the Coffee palette with dot modules, above Share, Save and Clear"><br>
+      <sub><b>Styled output</b> — share, save or clear</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="docs/screenshots/scan.png" width="230" alt="Scan tab: camera area with a flash button and a scan from photo option"><br>
+      <sub><b>Scan</b> — codes and barcodes, flash, photos</sub>
+    </td>
+    <td align="center">
+      <img src="docs/screenshots/history.png" width="230" alt="History tab: search field, type filter, and a saved link entry"><br>
+      <sub><b>History</b> — searchable and filterable</sub>
+    </td>
+  </tr>
+</table>
+</div>
 
 The Scan shot is from the Simulator, which has no camera — on a device that grey area is the live preview.
 
