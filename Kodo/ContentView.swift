@@ -12,17 +12,17 @@ struct ContentView: View {
     var body: some View {
         TabView {
             NavigationStack {
-                GeneratorView()
-            }
-            .tabItem {
-                Label("Create", systemImage: "qrcode")
-            }
-
-            NavigationStack {
                 ScannerView()
             }
             .tabItem {
                 Label("Scan", systemImage: "qrcode.viewfinder")
+            }
+
+            NavigationStack {
+                GeneratorView()
+            }
+            .tabItem {
+                Label("Create", systemImage: "qrcode")
             }
 
             NavigationStack {

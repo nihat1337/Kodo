@@ -36,6 +36,10 @@ struct ScannerView: View {
                                 .position(focusPoint)
                         }
                     }
+                    .overlay(alignment: .topTrailing) {
+                        flashButton
+                            .padding(12)
+                    }
             }
             .frame(height: 420)
             .clipShape(RoundedRectangle(cornerRadius: 16))
@@ -46,15 +50,18 @@ struct ScannerView: View {
 
             if let scan = viewModel.lastScan {
                 VStack(spacing: 12) {
+                    Text(scan.symbology)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+
                     Text(scan.value)
                         .font(.callout)
-                        .textSelection(.enabled)
-                        .lineLimit(3)
+                        .lineLimit(2)
 
-                    if let url = scan.url {
-                        Link("Open link", destination: url)
-                            .buttonStyle(.borderedProminent)
+                    Button("View details") {
+                        viewModel.isShowingDetails = true
                     }
+                    .buttonStyle(.borderedProminent)
 
                     Button("Scan again") {
                         viewModel.clearResult()
@@ -64,7 +71,7 @@ struct ScannerView: View {
                 Text(message)
                     .foregroundStyle(.secondary)
             } else {
-                Text("Point the camera at a QR code")
+                Text("Point the camera at a QR code or barcode")
                     .foregroundStyle(.secondary)
             }
 
@@ -72,18 +79,22 @@ struct ScannerView: View {
         }
         .padding()
         .navigationTitle("Scan")
-        .toolbar {
-            Button {
-                viewModel.toggleTorch()
-            } label: {
-                Label("Torch", systemImage: viewModel.isTorchOn ? "bolt.fill" : "bolt.slash")
-            }
-        }
         .task {
             viewModel.modelContext = modelContext
             await viewModel.start()
         }
         .onDisappear { viewModel.stop() }
+        .sensoryFeedback(.success, trigger: viewModel.scanCount)
+        .sheet(isPresented: $viewModel.isShowingDetails, onDismiss: viewModel.detailsDismissed) {
+            if let scan = viewModel.lastScan {
+                NavigationStack {
+                    CodeDetailView(record: scan)
+                        .toolbar {
+                            Button("Done") { viewModel.isShowingDetails = false }
+                        }
+                }
+            }
+        }
         .onChange(of: photoItem) { _, newItem in
             Task {
                 await viewModel.scanPhoto(newItem)
@@ -112,6 +123,18 @@ struct ScannerView: View {
 
         case .unavailable:
             placeholder("No camera here.\nRun on a real device, or scan from a photo.", icon: "iphone.slash")
+        }
+    }
+
+    private var flashButton: some View {
+        Button {
+            viewModel.toggleTorch()
+        } label: {
+            Image(systemName: viewModel.isTorchOn ? "bolt.fill" : "bolt.slash.fill")
+                .font(.title3)
+                .foregroundStyle(viewModel.isTorchOn ? .yellow : .white)
+                .padding(12)
+                .background(.black.opacity(0.45), in: Circle())
         }
     }
 

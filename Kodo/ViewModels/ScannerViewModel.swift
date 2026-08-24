@@ -26,13 +26,16 @@ final class ScannerViewModel {
     private(set) var message: String?
     private(set) var isTorchOn = false
 
+    var isShowingDetails = false
+    private(set) var scanCount = 0
+
     @ObservationIgnored var modelContext: ModelContext?
     @ObservationIgnored private let scanner = CameraScanner()
     @ObservationIgnored private let photoDecoder = PhotoQRDecoder()
 
     init() {
-        scanner.onCodeFound = { [weak self] value in
-            self?.handle(value)
+        scanner.onCodeFound = { [weak self] code in
+            self?.handle(code)
         }
         scanner.onFrame = { [weak self] cgImage in
             self?.previewFrame = Image(decorative: cgImage, scale: 1)
@@ -86,13 +89,13 @@ final class ScannerViewModel {
             message = "Could not read that image."
             return
         }
-        guard let value = await photoDecoder.decode(imageData: data) else {
-            message = "No QR code found in that image."
+        guard let code = await photoDecoder.decode(imageData: data) else {
+            message = "No code found in that image."
             return
         }
 
         lastScan = nil
-        handle(value)
+        handle(code)
     }
 
     func clearResult() {
@@ -100,11 +103,21 @@ final class ScannerViewModel {
         message = nil
     }
 
-    private func handle(_ value: String) {
-        guard lastScan?.value != value else { return }
+    private func handle(_ code: DetectedCode) {
+        guard lastScan?.value != code.value else { return }
 
-        let record = CodeRecord(value: value, kind: .scanned)
+        let record = CodeRecord(value: code.value, kind: .scanned, symbology: code.symbology)
         modelContext?.insert(record)
         lastScan = record
+        scanCount += 1
+
+        scanner.stop()
+        isShowingDetails = true
+    }
+
+    func detailsDismissed() {
+        isShowingDetails = false
+        guard status == .scanning else { return }
+        scanner.start()
     }
 }

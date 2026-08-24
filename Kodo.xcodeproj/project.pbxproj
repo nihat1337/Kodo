@@ -251,6 +251,7 @@
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Kodo uses the camera to scan QR codes.";
+				INFOPLIST_KEY_NSContactsUsageDescription = "Kodo adds contacts you scan to your address book.";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Kodo saves the QR codes you create to your photo library.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -295,6 +296,7 @@
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Kodo uses the camera to scan QR codes.";
+				INFOPLIST_KEY_NSContactsUsageDescription = "Kodo adds contacts you scan to your address book.";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Kodo saves the QR codes you create to your photo library.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;

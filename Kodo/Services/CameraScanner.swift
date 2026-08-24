@@ -13,7 +13,7 @@ final class CameraScanner: NSObject,
                            AVCaptureVideoDataOutputSampleBufferDelegate,
                            @unchecked Sendable {
 
-    var onCodeFound: ((String) -> Void)?
+    var onCodeFound: ((DetectedCode) -> Void)?
     var onFrame: ((CGImage) -> Void)?
 
     private let session = AVCaptureSession()
@@ -21,7 +21,14 @@ final class CameraScanner: NSObject,
     private let sessionQueue = DispatchQueue(label: "kodo.camera.session")
     private let outputQueue = DispatchQueue(label: "kodo.camera.output")
     private var device: AVCaptureDevice?
+    private var metadataOutput: AVCaptureMetadataOutput?
     private var isConfigured = false
+
+    private static let wantedObjectTypes: [AVMetadataObject.ObjectType] = [
+        .qr, .microQR, .aztec, .dataMatrix, .pdf417, .microPDF417,
+        .ean8, .ean13, .upce, .code39, .code39Mod43, .code93, .code128,
+        .itf14, .interleaved2of5, .codabar, .gs1DataBar, .gs1DataBarExpanded, .gs1DataBarLimited
+    ]
 
     func requestPermission() async -> Bool {
         switch AVCaptureDevice.authorizationStatus(for: .video) {
@@ -52,7 +59,8 @@ final class CameraScanner: NSObject,
         guard session.canAddOutput(metadataOutput) else { return }
         session.addOutput(metadataOutput)
         metadataOutput.setMetadataObjectsDelegate(self, queue: outputQueue)
-        metadataOutput.metadataObjectTypes = [.qr]
+        self.metadataOutput = metadataOutput
+        applyObjectTypes()
 
         let videoOutput = AVCaptureVideoDataOutput()
         guard session.canAddOutput(videoOutput) else { return }
@@ -82,6 +90,12 @@ final class CameraScanner: NSObject,
             guard self.session.isRunning else { return }
             self.session.stopRunning()
         }
+    }
+
+    private func applyObjectTypes() {
+        guard let output = metadataOutput else { return }
+        let supported = output.availableMetadataObjectTypes
+        output.metadataObjectTypes = Self.wantedObjectTypes.filter { supported.contains($0) }
     }
 
     func setTorch(_ isOn: Bool) {
@@ -125,8 +139,32 @@ final class CameraScanner: NSObject,
         guard let object = metadataObjects.first as? AVMetadataMachineReadableCodeObject,
               let value = object.stringValue else { return }
 
+        let code = DetectedCode(value: value, symbology: Self.label(for: object.type))
         DispatchQueue.main.async {
-            self.onCodeFound?(value)
+            self.onCodeFound?(code)
+        }
+    }
+
+    private static func label(for type: AVMetadataObject.ObjectType) -> String {
+        switch type {
+        case .qr: return "QR code"
+        case .microQR: return "Micro QR"
+        case .aztec: return "Aztec"
+        case .dataMatrix: return "Data Matrix"
+        case .pdf417: return "PDF417"
+        case .microPDF417: return "Micro PDF417"
+        case .ean8: return "EAN-8"
+        case .ean13: return "EAN-13"
+        case .upce: return "UPC-E"
+        case .code39: return "Code 39"
+        case .code39Mod43: return "Code 39 mod 43"
+        case .code93: return "Code 93"
+        case .code128: return "Code 128"
+        case .itf14: return "ITF-14"
+        case .interleaved2of5: return "Interleaved 2 of 5"
+        case .codabar: return "Codabar"
+        case .gs1DataBar, .gs1DataBarExpanded, .gs1DataBarLimited: return "GS1 DataBar"
+        default: return "Barcode"
         }
     }
 
