@@ -10,6 +10,11 @@ import SwiftData
 
 @main
 struct KodoApp: App {
+
+    init() {
+        SettingsKey.registerDefaults()
+    }
+
     var body: some Scene {
         WindowGroup {
             ContentView()

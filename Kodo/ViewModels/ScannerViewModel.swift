@@ -32,6 +32,7 @@ final class ScannerViewModel {
     @ObservationIgnored var modelContext: ModelContext?
     @ObservationIgnored private let scanner = CameraScanner()
     @ObservationIgnored private let photoDecoder = PhotoQRDecoder()
+    @ObservationIgnored private let sound = SoundPlayer()
 
     init() {
         scanner.onCodeFound = { [weak self] code in
@@ -107,10 +108,19 @@ final class ScannerViewModel {
         guard lastScan?.value != code.value else { return }
 
         let record = CodeRecord(value: code.value, kind: .scanned, symbology: code.symbology)
-        modelContext?.insert(record)
+        if SettingsKey.isOn(SettingsKey.saveHistory) {
+            modelContext?.insert(record)
+        }
         lastScan = record
-        scanCount += 1
 
+        if SettingsKey.isOn(SettingsKey.scanSound) {
+            sound.playScanSound()
+        }
+        if SettingsKey.isOn(SettingsKey.scanHaptics) {
+            scanCount += 1
+        }
+
+        guard SettingsKey.isOn(SettingsKey.showDetailsAutomatically) else { return }
         scanner.stop()
         isShowingDetails = true
     }

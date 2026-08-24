@@ -31,6 +31,13 @@ struct ContentView: View {
             .tabItem {
                 Label("History", systemImage: "clock")
             }
+
+            NavigationStack {
+                SettingsView()
+            }
+            .tabItem {
+                Label("Settings", systemImage: "gearshape")
+            }
         }
     }
 }
