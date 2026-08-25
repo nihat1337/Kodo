@@ -40,6 +40,7 @@ struct CodeDetailView: View {
 
             Section("Actions") {
                 actions
+                copyButtons
 
                 if let actionMessage {
                     Text(actionMessage)

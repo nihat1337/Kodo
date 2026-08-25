@@ -32,7 +32,24 @@ struct ScannedContentParser {
            let url = URL(string: value) {
             return .website(url)
         }
+        if let url = website(fromBareDomain: value) {
+            return .website(url)
+        }
         return .text(value)
+    }
+
+    private func website(fromBareDomain value: String) -> URL? {
+        guard !value.contains(" "), !value.contains(":"), value.contains(".") else { return nil }
+
+        let host = value.components(separatedBy: "/").first ?? value
+        let labels = host.components(separatedBy: ".")
+        guard labels.count >= 2,
+              labels.allSatisfy({ !$0.isEmpty }),
+              let tld = labels.last,
+              (2...24).contains(tld.count),
+              tld.allSatisfy({ $0.isLetter }) else { return nil }
+
+        return URL(string: "https://" + value)
     }
 
     private func wifi(_ value: String) -> ScannedContent {

@@ -10,34 +10,31 @@ Written in **pure SwiftUI** — no UIKit anywhere, not even a `UIViewRepresentab
 <table>
   <tr>
     <td align="center">
-      <img src="docs/screenshots/create.png" width="230" alt="Create tab: six type cards, a website field, and the style section with colour palettes and module shapes"><br>
-      <sub><b>Create</b> — pick a type, then style it</sub>
+      <img src="docs/screenshots/scan.png" width="200" alt="Scan tab: camera area with a flash button and a scan from photo option"><br>
+      <sub><b>Scan</b></sub>
     </td>
     <td align="center">
-      <img src="docs/screenshots/code.png" width="230" alt="A finished QR code in the Coffee palette with dot modules, above Share, Save and Clear"><br>
-      <sub><b>Styled output</b> — share, save or clear</sub>
+      <img src="docs/screenshots/create.png" width="200" alt="Create tab: six type cards above a website field and the style section"><br>
+      <sub><b>Create</b></sub>
+    </td>
+    <td align="center">
+      <img src="docs/screenshots/detail.png" width="200" alt="Detail screen: the code redrawn, its domain and address, and actions to open, copy the image or copy the text"><br>
+      <sub><b>What was scanned</b></sub>
     </td>
   </tr>
   <tr>
     <td align="center">
-      <img src="docs/screenshots/scan.png" width="230" alt="Scan tab: camera area with a flash button and a scan from photo option"><br>
-      <sub><b>Scan</b> — codes and barcodes, flash, photos</sub>
+      <img src="docs/screenshots/history.png" width="200" alt="History tab: search field, type filter and a saved entry"><br>
+      <sub><b>History</b></sub>
     </td>
     <td align="center">
-      <img src="docs/screenshots/history.png" width="230" alt="History tab: search field, type filter, and a saved link entry"><br>
-      <sub><b>History</b> — searchable and filterable</sub>
+      <img src="docs/screenshots/settings.png" width="200" alt="Settings tab with toggles for sound, vibration, opening details and websites, plus history controls"><br>
+      <sub><b>Settings</b></sub>
     </td>
-  </tr>
-  <tr>
-    <td align="center" colspan="2">
-      <img src="docs/screenshots/settings.png" width="230" alt="Settings tab with toggles for sound, vibration, opening details and websites, plus history controls"><br>
-      <sub><b>Settings</b> — what happens when a code is read</sub>
-    </td>
+    <td align="center"><sub>Taken in the Simulator, which has no camera —<br>on a device that grey area is the live preview.</sub></td>
   </tr>
 </table>
 </div>
-
-The Scan shot is from the Simulator, which has no camera — on a device that grey area is the live preview.
 
 ## Features
 
