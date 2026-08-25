@@ -217,7 +217,6 @@ struct GeneratorView: View {
         .foregroundStyle(isSelected ? Color.accentColor : Color.primary)
     }
 
-    /// A tiny nine module patch drawn in the shape it represents.
     private func shapePreview(_ module: QRModuleStyle) -> some View {
         let pattern = [[true, true, false], [true, false, true], [false, true, true]]
 

@@ -23,7 +23,6 @@ struct QRCodeGenerator {
 
         let filter = CIFilter.qrCodeGenerator()
         filter.message = Data(trimmed.utf8)
-        // A logo hides part of the code, so it only stays readable at the highest correction level.
         filter.correctionLevel = logo == nil ? style.correction.rawValue : QRCorrection.high.rawValue
 
         guard let output = filter.outputImage,
@@ -33,9 +32,6 @@ struct QRCodeGenerator {
         return draw(modules, style: style, logo: logo, minimumSize: minimumSize)
     }
 
-    // MARK: - Reading the code
-
-    /// The filter draws one pixel per module, so the raw output *is* the module grid.
     private func modules(from image: CIImage) -> [[Bool]]? {
         let width = Int(image.extent.width)
         let height = Int(image.extent.height)
@@ -59,8 +55,6 @@ struct QRCodeGenerator {
             }
         }
     }
-
-    // MARK: - Drawing the code
 
     private func draw(_ modules: [[Bool]],
                       style: QRStyle,
@@ -88,7 +82,6 @@ struct QRCodeGenerator {
 
         for row in 0..<rows {
             for column in 0..<columns where modules[row][column] {
-                // The grid is read top down; the canvas draws bottom up.
                 let rect = CGRect(x: CGFloat(column) * scale,
                                   y: CGFloat(rows - row - 1) * scale,
                                   width: scale,
@@ -151,10 +144,6 @@ struct QRCodeGenerator {
         canvas.restoreGState()
     }
 
-    // MARK: - Finder patterns
-
-    /// The three big corner squares are what a scanner looks for first, so they stay solid
-    /// even when the rest of the code is drawn as dots.
     private struct Region {
         let rows: Range<Int>
         let columns: Range<Int>
@@ -184,8 +173,6 @@ struct QRCodeGenerator {
             Region(rows: (maxRow - size + 1)..<(maxRow + 1), columns: minColumn..<(minColumn + size))
         ]
     }
-
-    // MARK: - Export
 
     private func cgColor(_ color: CodeColor) -> CGColor {
         CGColor(red: color.red, green: color.green, blue: color.blue, alpha: 1)

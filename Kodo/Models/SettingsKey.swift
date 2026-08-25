@@ -12,14 +12,15 @@ enum SettingsKey {
     static let scanHaptics = "settings.scanHaptics"
     static let showDetailsAutomatically = "settings.showDetailsAutomatically"
     static let saveHistory = "settings.saveHistory"
+    static let openWebsitesAutomatically = "settings.openWebsitesAutomatically"
 
-    /// Everything is on until the user says otherwise.
     static func registerDefaults() {
         UserDefaults.standard.register(defaults: [
             scanSound: true,
             scanHaptics: true,
             showDetailsAutomatically: true,
-            saveHistory: true
+            saveHistory: true,
+            openWebsitesAutomatically: false
         ])
     }
 

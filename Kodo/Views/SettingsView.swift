@@ -17,6 +17,7 @@ struct SettingsView: View {
     @AppStorage(SettingsKey.scanHaptics) private var scanHaptics = true
     @AppStorage(SettingsKey.showDetailsAutomatically) private var showDetailsAutomatically = true
     @AppStorage(SettingsKey.saveHistory) private var saveHistory = true
+    @AppStorage(SettingsKey.openWebsitesAutomatically) private var openWebsitesAutomatically = false
 
     @State private var confirmClear = false
 
@@ -39,12 +40,17 @@ struct SettingsView: View {
                 Toggle(isOn: $showDetailsAutomatically) {
                     Label("Open details", systemImage: "rectangle.portrait.and.arrow.right")
                 }
+                Toggle(isOn: $openWebsitesAutomatically) {
+                    Label("Open websites", systemImage: "safari")
+                }
             } header: {
                 Text("When a code is read")
             } footer: {
-                Text(showDetailsAutomatically
-                     ? "The details screen opens as soon as a code is read."
-                     : "Codes are read quietly. Tap View details when you want them.")
+                Text(openWebsitesAutomatically
+                     ? "Links go straight to your browser. Anything Kodo flags as risky still waits for you."
+                     : (showDetailsAutomatically
+                        ? "The details screen opens as soon as a code is read."
+                        : "Codes are read quietly. Tap View details when you want them."))
             }
 
             Section {

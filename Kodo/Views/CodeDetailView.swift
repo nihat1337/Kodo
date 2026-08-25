@@ -14,11 +14,13 @@ struct CodeDetailView: View {
     @Environment(\.openURL) private var openURL
     @State private var showPassword = false
     @State private var qrImage: Image?
+    @State private var qrBitmap: CGImage?
     @State private var confirmOpen = false
     @State private var actionMessage: String?
     @State private var isWorking = false
 
     private let safety = LinkSafety()
+    private let clipboard = Clipboard()
 
     private var content: ScannedContent {
         ScannedContentParser().parse(record.value)
@@ -100,7 +102,32 @@ struct CodeDetailView: View {
     private func makeCode() {
         guard qrImage == nil,
               let image = QRCodeGenerator().makeImage(from: record.value) else { return }
+        qrBitmap = image
         qrImage = Image(decorative: image, scale: 1)
+    }
+
+    private var isQRCode: Bool {
+        record.symbology.lowercased().contains("qr")
+    }
+
+    private var copyButtons: some View {
+        Group {
+            if isQRCode, let qrBitmap {
+                Button {
+                    clipboard.copy(image: qrBitmap)
+                    actionMessage = "QR code image copied."
+                } label: {
+                    Label("Copy QR image", systemImage: "photo.on.rectangle")
+                }
+            }
+
+            Button {
+                clipboard.copy(text: record.value)
+                actionMessage = isQRCode ? "Text copied." : "Barcode number copied."
+            } label: {
+                Label(isQRCode ? "Copy text" : "Copy number", systemImage: "doc.on.doc")
+            }
+        }
     }
 
     private var header: some View {

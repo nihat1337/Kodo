@@ -63,7 +63,6 @@ enum QRCorrection: String, CaseIterable, Identifiable {
     }
 }
 
-/// Ready made pairs, all with enough contrast to stay scannable.
 struct QRPalette: Identifiable, Equatable {
     let id: String
     let name: String
@@ -105,7 +104,6 @@ struct QRStyle: Equatable {
     var foreground: CodeColor { palette.foreground }
     var background: CodeColor { palette.background }
 
-    /// A scanner needs the dark and light modules to be clearly different.
     var hasPoorContrast: Bool {
         abs(foreground.luminance - background.luminance) < 0.4
     }

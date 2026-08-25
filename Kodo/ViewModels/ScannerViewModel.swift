@@ -25,6 +25,7 @@ final class ScannerViewModel {
     private(set) var lastScan: CodeRecord?
     private(set) var message: String?
     private(set) var isTorchOn = false
+    private(set) var autoOpenURL: URL?
 
     var isShowingDetails = false
     private(set) var scanCount = 0
@@ -33,6 +34,8 @@ final class ScannerViewModel {
     @ObservationIgnored private let scanner = CameraScanner()
     @ObservationIgnored private let photoDecoder = PhotoQRDecoder()
     @ObservationIgnored private let sound = SoundPlayer()
+    @ObservationIgnored private let parser = ScannedContentParser()
+    @ObservationIgnored private let safety = LinkSafety()
 
     init() {
         scanner.onCodeFound = { [weak self] code in
@@ -120,9 +123,25 @@ final class ScannerViewModel {
             scanCount += 1
         }
 
+        if let url = websiteToOpenAutomatically(code.value) {
+            autoOpenURL = url
+            return
+        }
+
         guard SettingsKey.isOn(SettingsKey.showDetailsAutomatically) else { return }
         scanner.stop()
         isShowingDetails = true
+    }
+
+    private func websiteToOpenAutomatically(_ value: String) -> URL? {
+        guard SettingsKey.isOn(SettingsKey.openWebsitesAutomatically),
+              case .website(let url) = parser.parse(value),
+              safety.warnings(for: url).isEmpty else { return nil }
+        return url
+    }
+
+    func autoOpenHandled() {
+        autoOpenURL = nil
     }
 
     func detailsDismissed() {

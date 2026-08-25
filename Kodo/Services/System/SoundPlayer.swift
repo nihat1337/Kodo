@@ -9,7 +9,6 @@ import AudioToolbox
 
 struct SoundPlayer {
 
-    /// 1057 is the short system "Tink", the closest built in sound to a scanner beep.
     private let scanSoundID: SystemSoundID = 1057
 
     func playScanSound() {

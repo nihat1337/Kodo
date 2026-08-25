@@ -74,7 +74,6 @@ final class GeneratorViewModel {
     }
 
     func clear() {
-        // Clearing the result first stops the style reset below from redrawing anything.
         clearResult()
         input = QRInput()
         style = QRStyle()
@@ -98,7 +97,6 @@ final class GeneratorViewModel {
         redrawIfNeeded()
     }
 
-    /// Style changes repaint the code that is already on screen, without waiting for another tap.
     private func redrawIfNeeded() {
         guard qrImage != nil else { return }
         generate()
