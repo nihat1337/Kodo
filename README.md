@@ -2,7 +2,7 @@
 
 A QR code app for iOS: create styled codes for links, contacts, Wi-Fi and more, and scan QR codes and barcodes with the camera or from a photo.
 
-Written in **pure SwiftUI** — no UIKit anywhere, not even a `UIViewRepresentable` bridge. The camera preview is drawn by SwiftUI itself from raw video frames.
+Written in **pure SwiftUI** — no UIKit anywhere, not even a `UIViewRepresentable` bridge. The camera preview is drawn by SwiftUI itself from raw video frames. The single exception is `Clipboard.swift`, because `UIPasteboard` is the only clipboard iOS offers.
 
 ## Screenshots
 
@@ -28,6 +28,12 @@ Written in **pure SwiftUI** — no UIKit anywhere, not even a `UIViewRepresentab
       <sub><b>History</b> — searchable and filterable</sub>
     </td>
   </tr>
+  <tr>
+    <td align="center" colspan="2">
+      <img src="docs/screenshots/settings.png" width="230" alt="Settings tab with toggles for sound, vibration, opening details and websites, plus history controls"><br>
+      <sub><b>Settings</b> — what happens when a code is read</sub>
+    </td>
+  </tr>
 </table>
 </div>
 
@@ -40,12 +46,18 @@ The Scan shot is from the Simulator, which has no camera — on a device that gr
 - **Styling** — eight ready made colour palettes, three module shapes (square, rounded, dots), a choice of error correction level, and a logo in the middle. Every palette is contrast checked, and a logo automatically forces the highest correction level so the code still scans.
 - **Share / Save** — share the code as a real PNG file, or save it to Photos.
 
-**Scan** — the camera reads QR codes *and* barcodes at once (EAN, UPC, Code 39/93/128, ITF, Codabar, Data Matrix, PDF417, Aztec and more); no mode to choose. Includes a flash toggle, tap to focus, a haptic tick on every hit, and scanning from a photo already in your library.
+**Scan** — the camera reads QR codes *and* barcodes at once (EAN, UPC, Code 39/93/128, ITF, Codabar, Data Matrix, PDF417, Aztec and more); no mode to choose. Includes a flash toggle, tap to focus, a beep and a haptic tick on every hit (both switchable), and scanning from a photo already in your library.
 
 - **It reads the contents, not just the string.** A Wi-Fi code becomes network, password and security; a contact becomes name, phone and email; a location becomes coordinates. Each one offers the matching action: join the network, add to Contacts, call, write an email, open in Maps.
 - **Link safety** — before you open a scanned link, Kodo shows the real domain and warns about lookalike (punycode) domains, addresses that hide their destination behind an `@`, URL shorteners, raw IP addresses, unencrypted `http://`, and unusual ports. Flagged links require a confirmation.
 
 **History** — everything you scan or create is stored locally, searchable, filterable by type, and starrable. Tap any entry to see the code again with its details.
+
+- **Bulk tools** — tap Select to pick several at once, then copy them, delete them (after a confirmation) or share them. Export the selection as a text file or as CSV, with values quoted so commas and quotes inside a code survive the round trip.
+
+**Settings** — sound, vibration and whether the details screen opens by itself when a code is read; whether plain links open straight in the browser (off by default, and never for a link Kodo has flagged); whether codes are saved to history at all, plus a way to clear it.
+
+**Copying** — a scanned QR copies as an image you can paste; a barcode copies the number it decoded to. Available on the scan result, in the details screen, and for a whole selection in History.
 
 ## Requirements
 
@@ -64,7 +76,8 @@ Kodo/
 │   ├── QRType.swift                 what you can create, and the form behind it
 │   ├── QRStyle.swift                palettes, module shapes, correction levels
 │   ├── ScannedContent.swift         what a scanned code turned out to be
-│   └── DetectedCode.swift           a hit: value + symbology
+│   ├── DetectedCode.swift           a hit: value + symbology
+│   └── SettingsKey.swift            keys and defaults for the settings
 ├── ViewModels/
 │   ├── GeneratorViewModel.swift
 │   └── ScannerViewModel.swift
@@ -72,17 +85,28 @@ Kodo/
 │   ├── GeneratorView.swift
 │   ├── ScannerView.swift
 │   ├── HistoryView.swift
+│   ├── SettingsView.swift
 │   └── CodeDetailView.swift         shared by Scan and History
 └── Services/
-    ├── QRCodeGenerator.swift        Core Image + Core Graphics: styled codes
-    ├── QRPayloadBuilder.swift       text -> vCard / WIFI: / mailto: / geo: ...
-    ├── ScannedContentParser.swift   ... and back again
-    ├── CameraScanner.swift          AVFoundation: session, torch, focus
-    ├── PhotoQRDecoder.swift         Vision: read a code out of an image
-    ├── LinkSafety.swift             warns about deceptive links
-    ├── WiFiJoiner.swift             joins a scanned network
-    └── ContactSaver.swift           saves a scanned contact
+    ├── Creating/
+    │   ├── QRCodeGenerator.swift    Core Image + Core Graphics: styled codes
+    │   └── QRPayloadBuilder.swift   text -> vCard / WIFI: / mailto: / geo: ...
+    ├── Scanning/
+    │   ├── CameraScanner.swift      AVFoundation: session, torch, focus
+    │   ├── PhotoQRDecoder.swift     Vision: read a code out of an image
+    │   └── ScannedContentParser.swift  ... and the payload builder in reverse
+    ├── Results/
+    │   ├── LinkSafety.swift         warns about deceptive links
+    │   ├── WiFiJoiner.swift         joins a scanned network
+    │   ├── ContactSaver.swift       saves a scanned contact
+    │   └── HistoryExporter.swift    text and CSV export
+    └── System/
+        ├── Clipboard.swift          the one file that imports UIKit
+        └── SoundPlayer.swift        the beep on a hit
 ```
+
+The service folders follow the flow: build a code, read a code, act on what was
+read, talk to the system.
 
 MVVM, with one rule that keeps it honest:
 
@@ -147,6 +171,7 @@ The result goes through the same code path as a camera scan, so it lands in hist
 | Key | Why |
 | --- | --- |
 | `NSCameraUsageDescription` | live scanning |
+| — | if it is refused, the scan screen explains why and offers a button into Settings |
 | `NSPhotoLibraryAddUsageDescription` | saving a created code to Photos |
 | `NSContactsUsageDescription` | adding a scanned contact to your address book |
 
@@ -161,7 +186,7 @@ Nothing is collected or sent anywhere — see [PRIVACY.md](PRIVACY.md).
 
 - **No Copy button.** The only clipboard API on iOS is `UIPasteboard`, which is UIKit. Copy is available inside the share sheet instead.
 - **No PDF or SVG export** yet, for people printing posters and table tents.
-- **No test target.** The payload builder, parser, link checker and generator are pure logic and deserve one.
+- **No test target.** The payload builder, parser, link checker, exporter and generator are pure logic and deserve one.
 - **The app icon is still the Xcode placeholder.**
 
 ## License
