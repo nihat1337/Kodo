@@ -25,6 +25,9 @@ final class GeneratorViewModel {
 
     private(set) var qrImage: Image?
     private(set) var shareURL: URL?
+    private(set) var pngURL: URL?
+    private(set) var pdfURL: URL?
+    private(set) var svgURL: URL?
     private(set) var message: String?
 
     @ObservationIgnored var modelContext: ModelContext?
@@ -49,7 +52,10 @@ final class GeneratorViewModel {
 
         cgImage = image
         qrImage = Image(decorative: image, scale: 1)
-        shareURL = generator.writePNG(image, named: "QRCode")
+        pngURL = generator.writePNG(image, named: "QRCode")
+        pdfURL = generator.writePDF(from: payload, style: style, logo: logo, named: "QRCode")
+        svgURL = generator.writeSVG(from: payload, style: style, logo: logo, named: "QRCode")
+        shareURL = pngURL
         addToHistory(payload)
     }
 
@@ -105,6 +111,9 @@ final class GeneratorViewModel {
     private func clearResult() {
         qrImage = nil
         shareURL = nil
+        pngURL = nil
+        pdfURL = nil
+        svgURL = nil
         cgImage = nil
         message = nil
     }

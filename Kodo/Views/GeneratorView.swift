@@ -389,23 +389,49 @@ struct GeneratorView: View {
                 .scaledToFit()
                 .frame(maxWidth: 260, maxHeight: 260)
 
-            HStack(spacing: 16) {
-                if let shareURL = viewModel.shareURL {
-                    ShareLink(item: shareURL) {
-                        Label("Share", systemImage: "square.and.arrow.up")
+            HStack(spacing: 12) {
+                Menu {
+                    if let pngURL = viewModel.pngURL {
+                        ShareLink(item: pngURL) {
+                            Label("PNG image", systemImage: "photo")
+                        }
                     }
+                    if let pdfURL = viewModel.pdfURL {
+                        ShareLink(item: pdfURL) {
+                            Label("PDF document", systemImage: "doc.text")
+                        }
+                    }
+                    if let svgURL = viewModel.svgURL {
+                        ShareLink(item: svgURL) {
+                            Label("SVG vector", systemImage: "curlybraces")
+                        }
+                    }
+                } label: {
+                    Label("Share", systemImage: "square.and.arrow.up")
+                        .padding(.horizontal, 4)
                 }
+                .buttonStyle(.bordered)
+                .buttonBorderShape(.capsule)
 
                 Button {
                     Task { await viewModel.saveToPhotos() }
                 } label: {
                     Label("Save", systemImage: "square.and.arrow.down")
+                        .padding(.horizontal, 4)
                 }
+                .buttonStyle(.bordered)
+                .buttonBorderShape(.capsule)
 
-                Button("Clear") {
+                Button(role: .destructive) {
                     viewModel.clear()
+                } label: {
+                    Label("Clear", systemImage: "xmark")
+                        .padding(.horizontal, 4)
                 }
+                .buttonStyle(.bordered)
+                .buttonBorderShape(.capsule)
             }
+            .lineLimit(1)
         } else {
             ContentUnavailableView("No code yet",
                                    systemImage: "qrcode",

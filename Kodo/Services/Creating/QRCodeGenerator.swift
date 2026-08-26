@@ -5,6 +5,8 @@
 //  Created by Nihat Samadov on 16.08.26.
 //
 
+import Foundation
+import CoreGraphics
 import CoreImage
 import CoreImage.CIFilterBuiltins
 import ImageIO
@@ -18,18 +20,171 @@ struct QRCodeGenerator {
                    style: QRStyle = QRStyle(),
                    logo: CGImage? = nil,
                    minimumSize: CGFloat = 1024) -> CGImage? {
+        guard let modules = extractModules(from: text, hasLogo: logo != nil, correction: style.correction) else { return nil }
+        let rows = modules.count
+        let columns = modules[0].count
+        let scale = max(1, (minimumSize / CGFloat(columns)).rounded(.up))
+        let width = Int(CGFloat(columns) * scale)
+        let height = Int(CGFloat(rows) * scale)
+
+        guard let canvas = CGContext(data: nil,
+                                     width: width,
+                                     height: height,
+                                     bitsPerComponent: 8,
+                                     bytesPerRow: 0,
+                                     space: CGColorSpaceCreateDeviceRGB(),
+                                     bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
+
+        renderModules(modules, in: canvas, width: width, height: height, scale: scale, style: style, logo: logo)
+        return canvas.makeImage()
+    }
+
+    func pdfData(from text: String,
+                 style: QRStyle = QRStyle(),
+                 logo: CGImage? = nil,
+                 size: CGFloat = 1024) -> Data? {
+        guard let modules = extractModules(from: text, hasLogo: logo != nil, correction: style.correction) else { return nil }
+        let rows = modules.count
+        let columns = modules[0].count
+        let scale = size / CGFloat(columns)
+        let width = Int(size)
+        let height = Int(size)
+
+        let data = NSMutableData()
+        guard let consumer = CGDataConsumer(data: data as CFMutableData) else { return nil }
+
+        var mediaBox = CGRect(x: 0, y: 0, width: size, height: size)
+        guard let canvas = CGContext(consumer: consumer, mediaBox: &mediaBox, nil) else { return nil }
+
+        canvas.beginPage(mediaBox: &mediaBox)
+        renderModules(modules, in: canvas, width: width, height: height, scale: scale, style: style, logo: logo)
+        canvas.endPage()
+        canvas.closePDF()
+
+        return data as Data
+    }
+
+    func writePDF(from text: String,
+                  style: QRStyle = QRStyle(),
+                  logo: CGImage? = nil,
+                  named name: String = "QRCode") -> URL? {
+        guard let data = pdfData(from: text, style: style, logo: logo) else { return nil }
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("\(name).pdf")
+        do {
+            try data.write(to: url)
+            return url
+        } catch {
+            return nil
+        }
+    }
+
+    func svgString(from text: String,
+                   style: QRStyle = QRStyle(),
+                   logo: CGImage? = nil,
+                   size: CGFloat = 1024) -> String? {
+        guard let modules = extractModules(from: text, hasLogo: logo != nil, correction: style.correction) else { return nil }
+        let rows = modules.count
+        let columns = modules[0].count
+        let scale = size / CGFloat(columns)
+        let width = size
+        let height = size
+
+        let bgHex = hexColor(style.background)
+        let fgHex = hexColor(style.foreground)
+        let finders = finderRegions(in: modules)
+
+        var elements: [String] = []
+
+        for row in 0..<rows {
+            for column in 0..<columns where modules[row][column] {
+                let x = CGFloat(column) * scale
+                let y = CGFloat(row) * scale
+                let isFinder = finders.contains { $0.contains(row: row, column: column) }
+
+                if isFinder {
+                    elements.append("<rect x=\"\(x)\" y=\"\(y)\" width=\"\(scale)\" height=\"\(scale)\"/>")
+                } else {
+                    switch style.module {
+                    case .square:
+                        elements.append("<rect x=\"\(x)\" y=\"\(y)\" width=\"\(scale)\" height=\"\(scale)\"/>")
+                    case .rounded:
+                        let inset = scale * 0.04
+                        let corner = scale * 0.3
+                        elements.append("<rect x=\"\(x + inset)\" y=\"\(y + inset)\" width=\"\(scale - inset * 2)\" height=\"\(scale - inset * 2)\" rx=\"\(corner)\" ry=\"\(corner)\"/>")
+                    case .dots:
+                        let cx = x + scale / 2
+                        let cy = y + scale / 2
+                        let r = (scale / 2) - (scale * 0.06)
+                        elements.append("<circle cx=\"\(cx)\" cy=\"\(cy)\" r=\"\(r)\"/>")
+                    }
+                }
+            }
+        }
+
+        var logoSVG = ""
+        if let logo, let logoData = pngData(from: logo) {
+            let side = min(width, height) * 0.22
+            let boxX = (width - side) / 2
+            let boxY = (height - side) / 2
+            let pad = side * 0.12
+            let paddedX = boxX - pad
+            let paddedY = boxY - pad
+            let paddedSide = side + pad * 2
+            let corner = paddedSide * 0.2
+
+            let base64 = logoData.base64EncodedString()
+            logoSVG = """
+            <rect x=\"\(paddedX)\" y=\"\(paddedY)\" width=\"\(paddedSide)\" height=\"\(paddedSide)\" rx=\"\(corner)\" ry=\"\(corner)\" fill=\"\(bgHex)\"/>
+            <image x=\"\(boxX)\" y=\"\(boxY)\" width=\"\(side)\" height=\"\(side)\" href=\"data:image/png;base64,\(base64)\" preserveAspectRatio=\"xMidYMid meet\"/>
+            """
+        }
+
+        return """
+        <?xml version=\"1.0\" encoding=\"UTF-8\"?>
+        <svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 \(width) \(height)\" width=\"\(width)\" height=\"\(height)\">
+        <rect width=\"100%\" height=\"100%\" fill=\"\(bgHex)\"/>
+        <g fill=\"\(fgHex)\">
+        \(elements.joined(separator: "\n"))
+        </g>
+        \(logoSVG)
+        </svg>
+        """
+    }
+
+    func svgData(from text: String,
+                 style: QRStyle = QRStyle(),
+                 logo: CGImage? = nil,
+                 size: CGFloat = 1024) -> Data? {
+        guard let string = svgString(from: text, style: style, logo: logo, size: size) else { return nil }
+        return string.data(using: .utf8)
+    }
+
+    func writeSVG(from text: String,
+                  style: QRStyle = QRStyle(),
+                  logo: CGImage? = nil,
+                  named name: String = "QRCode") -> URL? {
+        guard let data = svgData(from: text, style: style, logo: logo) else { return nil }
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("\(name).svg")
+        do {
+            try data.write(to: url)
+            return url
+        } catch {
+            return nil
+        }
+    }
+
+    private func extractModules(from text: String, hasLogo: Bool, correction: QRCorrection) -> [[Bool]]? {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return nil }
 
         let filter = CIFilter.qrCodeGenerator()
         filter.message = Data(trimmed.utf8)
-        filter.correctionLevel = logo == nil ? style.correction.rawValue : QRCorrection.high.rawValue
+        filter.correctionLevel = hasLogo ? QRCorrection.high.rawValue : correction.rawValue
 
         guard let output = filter.outputImage,
-              output.extent.width > 0,
-              let modules = modules(from: output) else { return nil }
+              output.extent.width > 0 else { return nil }
 
-        return draw(modules, style: style, logo: logo, minimumSize: minimumSize)
+        return modules(from: output)
     }
 
     private func modules(from image: CIImage) -> [[Bool]]? {
@@ -56,23 +211,15 @@ struct QRCodeGenerator {
         }
     }
 
-    private func draw(_ modules: [[Bool]],
-                      style: QRStyle,
-                      logo: CGImage?,
-                      minimumSize: CGFloat) -> CGImage? {
+    private func renderModules(_ modules: [[Bool]],
+                              in canvas: CGContext,
+                              width: Int,
+                              height: Int,
+                              scale: CGFloat,
+                              style: QRStyle,
+                              logo: CGImage?) {
         let rows = modules.count
         let columns = modules[0].count
-        let scale = max(1, (minimumSize / CGFloat(columns)).rounded(.up))
-        let width = Int(CGFloat(columns) * scale)
-        let height = Int(CGFloat(rows) * scale)
-
-        guard let canvas = CGContext(data: nil,
-                                     width: width,
-                                     height: height,
-                                     bitsPerComponent: 8,
-                                     bytesPerRow: 0,
-                                     space: CGColorSpaceCreateDeviceRGB(),
-                                     bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
 
         canvas.setFillColor(cgColor(style.background))
         canvas.fill(CGRect(x: 0, y: 0, width: width, height: height))
@@ -99,8 +246,6 @@ struct QRCodeGenerator {
         if let logo {
             drawLogo(logo, in: canvas, width: width, height: height, background: style.background)
         }
-
-        return canvas.makeImage()
     }
 
     private func addShape(for module: QRModuleStyle, in rect: CGRect, to canvas: CGContext) {
@@ -176,6 +321,13 @@ struct QRCodeGenerator {
 
     private func cgColor(_ color: CodeColor) -> CGColor {
         CGColor(red: color.red, green: color.green, blue: color.blue, alpha: 1)
+    }
+
+    private func hexColor(_ color: CodeColor) -> String {
+        let r = Int((color.red * 255).rounded())
+        let g = Int((color.green * 255).rounded())
+        let b = Int((color.blue * 255).rounded())
+        return String(format: "#%02X%02X%02X", r, g, b)
     }
 
     func pngData(from image: CGImage) -> Data? {

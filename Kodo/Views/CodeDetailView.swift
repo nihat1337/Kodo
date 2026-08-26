@@ -21,6 +21,7 @@ struct CodeDetailView: View {
 
     private let safety = LinkSafety()
     private let clipboard = Clipboard()
+    private let generator = QRCodeGenerator()
 
     private var content: ScannedContent {
         ScannedContentParser().parse(record.value)
@@ -47,8 +48,33 @@ struct CodeDetailView: View {
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
-                ShareLink(item: record.value) {
-                    Label("Share", systemImage: "square.and.arrow.up")
+                if isQRCode {
+                    Menu {
+                        ShareLink(item: record.value) {
+                            Label("Share text", systemImage: "text.alignleft")
+                        }
+                        if let qrBitmap, let png = generator.writePNG(qrBitmap, named: "QRCode") {
+                            ShareLink(item: png) {
+                                Label("PNG image", systemImage: "photo")
+                            }
+                        }
+                        if let pdf = generator.writePDF(from: record.value, named: "QRCode") {
+                            ShareLink(item: pdf) {
+                                Label("PDF document", systemImage: "doc.text")
+                            }
+                        }
+                        if let svg = generator.writeSVG(from: record.value, named: "QRCode") {
+                            ShareLink(item: svg) {
+                                Label("SVG vector", systemImage: "curlybraces")
+                            }
+                        }
+                    } label: {
+                        Label("Share", systemImage: "square.and.arrow.up")
+                    }
+                } else {
+                    ShareLink(item: record.value) {
+                        Label("Share", systemImage: "square.and.arrow.up")
+                    }
                 }
                 Button {
                     record.isFavorite.toggle()

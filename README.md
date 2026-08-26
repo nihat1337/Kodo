@@ -41,7 +41,7 @@ Written in **pure SwiftUI** — no UIKit anywhere, not even a `UIViewRepresentab
 **Create** — six kinds of code, each with its own form: website, contact (vCard), Wi-Fi, email, SMS and location. Codes render at 1024px or larger, not at screen size, so they stay sharp in print.
 
 - **Styling** — eight ready made colour palettes, three module shapes (square, rounded, dots), a choice of error correction level, and a logo in the middle. Every palette is contrast checked, and a logo automatically forces the highest correction level so the code still scans.
-- **Share / Save** — share the code as a real PNG file, or save it to Photos.
+- **Share / Save / Export** — export the code as a high-resolution PNG, resolution-independent vector PDF, or scalable SVG file, or save it directly to Photos.
 
 **Scan** — the camera reads QR codes *and* barcodes at once (EAN, UPC, Code 39/93/128, ITF, Codabar, Data Matrix, PDF417, Aztec and more); no mode to choose. Includes a flash toggle, tap to focus, a beep and a haptic tick on every hit (both switchable), and scanning from a photo already in your library.
 
@@ -67,7 +67,7 @@ Written in **pure SwiftUI** — no UIKit anywhere, not even a `UIViewRepresentab
 ```
 Kodo/
 ├── KodoApp.swift                    @main + the SwiftData container
-├── ContentView.swift                the three tabs
+├── ContentView.swift                the four tabs
 ├── Models/
 │   ├── CodeRecord.swift             @Model: value, kind, symbology, date, isFavorite
 │   ├── QRType.swift                 what you can create, and the form behind it
@@ -86,7 +86,7 @@ Kodo/
 │   └── CodeDetailView.swift         shared by Scan and History
 └── Services/
     ├── Creating/
-    │   ├── QRCodeGenerator.swift    Core Image + Core Graphics: styled codes
+    │   ├── QRCodeGenerator.swift    Core Image + Core Graphics: PNG, PDF and SVG
     │   └── QRPayloadBuilder.swift   text -> vCard / WIFI: / mailto: / geo: ...
     ├── Scanning/
     │   ├── CameraScanner.swift      AVFoundation: session, torch, focus
@@ -120,7 +120,7 @@ code needs — a vCard for a contact, `WIFI:T:WPA;S:...;P:...;;` for a network, 
 with percent encoded parameters for an email, `geo:` for a location — escaping any
 special characters the user typed.
 
-`QRCodeGenerator` then turns that string into an image:
+`QRCodeGenerator` then turns that string into the requested format:
 
 1. `CIFilter.qrCodeGenerator()` produces a tiny `CIImage` — **one pixel per module**.
 2. Those pixels are read back into a grid of booleans. That grid *is* the QR code.
@@ -128,6 +128,7 @@ special characters the user typed.
    The three big corner squares stay solid whatever the shape, because that is what
    a scanner looks for first.
 4. A logo, if set, is composited into the middle on a rounded backing plate.
+5. For vector exports, Core Graphics writes resolution-independent vector paths to a PDF context (`CGPDFContext`), or generates standards-compliant SVG XML.
 
 Every created code is inserted into SwiftData (duplicates of the same value are skipped).
 
@@ -181,8 +182,6 @@ Nothing is collected or sent anywhere — see [PRIVACY.md](PRIVACY.md).
 
 ## Known gaps
 
-- **No Copy button.** The only clipboard API on iOS is `UIPasteboard`, which is UIKit. Copy is available inside the share sheet instead.
-- **No PDF or SVG export** yet, for people printing posters and table tents.
 - **No test target.** The payload builder, parser, link checker, exporter and generator are pure logic and deserve one.
 - **The app icon is still the Xcode placeholder.**
 
