@@ -13,6 +13,7 @@ enum SettingsKey {
     static let showDetailsAutomatically = "settings.showDetailsAutomatically"
     static let saveHistory = "settings.saveHistory"
     static let openWebsitesAutomatically = "settings.openWebsitesAutomatically"
+    static let hasSeenGuide = "settings.hasSeenGuide"
 
     static func registerDefaults() {
         UserDefaults.standard.register(defaults: [
@@ -20,7 +21,8 @@ enum SettingsKey {
             scanHaptics: true,
             showDetailsAutomatically: true,
             saveHistory: true,
-            openWebsitesAutomatically: false
+            openWebsitesAutomatically: false,
+            hasSeenGuide: false
         ])
     }
 

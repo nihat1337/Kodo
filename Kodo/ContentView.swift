@@ -9,6 +9,10 @@ import SwiftUI
 import SwiftData
 
 struct ContentView: View {
+
+    @AppStorage(SettingsKey.hasSeenGuide) private var hasSeenGuide = false
+    @State private var showGuide = false
+
     var body: some View {
         TabView {
             NavigationStack {
@@ -38,6 +42,15 @@ struct ContentView: View {
             .tabItem {
                 Label("Settings", systemImage: "gearshape")
             }
+        }
+        .task {
+            if !hasSeenGuide {
+                showGuide = true
+                hasSeenGuide = true
+            }
+        }
+        .sheet(isPresented: $showGuide) {
+            GuideView()
         }
     }
 }

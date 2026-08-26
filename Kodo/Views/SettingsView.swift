@@ -20,6 +20,7 @@ struct SettingsView: View {
     @AppStorage(SettingsKey.openWebsitesAutomatically) private var openWebsitesAutomatically = false
 
     @State private var confirmClear = false
+    @State private var showGuide = false
 
     private var version: String {
         let dictionary = Bundle.main.infoDictionary
@@ -73,6 +74,12 @@ struct SettingsView: View {
             }
 
             Section {
+                Button {
+                    showGuide = true
+                } label: {
+                    Label("App guide", systemImage: "questionmark.circle")
+                }
+
                 LabeledContent("Version", value: version)
             } header: {
                 Text("About")
@@ -81,6 +88,9 @@ struct SettingsView: View {
             }
         }
         .navigationTitle("Settings")
+        .sheet(isPresented: $showGuide) {
+            GuideView()
+        }
         .confirmationDialog("Delete every saved code?",
                             isPresented: $confirmClear,
                             titleVisibility: .visible) {
