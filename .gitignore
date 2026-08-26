@@ -20,3 +20,6 @@ xcuserdata/
 # Playgrounds
 timeline.xctimeline
 playground.xcworkspace
+
+# Local files
+CLAUDE.md

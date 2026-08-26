@@ -178,13 +178,9 @@ The photo picker needs no permission — it runs out of process.
 Joining a scanned Wi-Fi network needs the **Hotspot Configuration** capability, which is
 not enabled in this project. Add it under Signing & Capabilities to turn that button on.
 
-Nothing is collected or sent anywhere — see [PRIVACY.md](PRIVACY.md).
+Nothing is collected or sent anywhere.
 
 ## Known gaps
 
 - **No test target.** The payload builder, parser, link checker, exporter and generator are pure logic and deserve one.
 - **The app icon is still the Xcode placeholder.**
-
-## License
-
-MIT — see [LICENSE](LICENSE).

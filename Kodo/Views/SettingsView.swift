@@ -74,12 +74,6 @@ struct SettingsView: View {
 
             Section {
                 LabeledContent("Version", value: version)
-
-                if let url = URL(string: "https://github.com/nihat1337/Kodo/blob/main/PRIVACY.md") {
-                    Link(destination: url) {
-                        Label("Privacy", systemImage: "hand.raised")
-                    }
-                }
             } header: {
                 Text("About")
             } footer: {
